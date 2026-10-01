@@ -1,0 +1,30 @@
+title: New Local User Account Created
+id: custom-user-007
+status: production
+description: Detects creation of new local user accounts which may indicate unauthorized access or persistence
+author: SOC Team
+date: 2024/01/01
+category: custom
+severity: medium
+mitre:
+  tactic: Persistence
+  technique: T1136.001
+
+qradar:
+  rule_name: "CUSTOM - New Local User Created"
+  rule_type: "EventRule"
+  severity: medium
+  credibility: 7
+  relevance: 8
+
+detection:
+  condition: >
+    EventID = '4720' OR
+    CommandLine MATCHES '.*net user.*\/add.*'
+  timeframe: 1m
+  threshold: 1
+
+response:
+  - Verify if change was authorized
+  - Check who created the account
+  - Disable if unauthorized

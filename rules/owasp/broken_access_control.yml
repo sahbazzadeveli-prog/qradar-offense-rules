@@ -1,7 +1,9 @@
 title: Broken Access Control Detection
 id: owasp-bac-004
 status: production
-description: Detects attempts to access resources beyond user authorization level
+description: >
+  Detects repeated HTTP 401/403 responses from the same source IP,
+  indicating attempts to access unauthorized resources.
 author: SOC Team
 date: 2024/01/01
 category: owasp
@@ -12,19 +14,31 @@ mitre:
 
 qradar:
   rule_name: "OWASP - Broken Access Control Attempt"
-  rule_type: "EventRule"
-  severity: high
+  rule_type: EventRule
+  offense: true
+  severity: 8
   credibility: 8
   relevance: 9
+  expression: >
+    SELECT sourceip, username, \"Event ID\", COUNT(*) AS attempts
+    FROM events
+    WHERE \"Event ID\"='4625'
+    OR \"Event ID\"='4656'
+    GROUP BY sourceip
+    HAVING attempts >= 10
+    LAST 5 MINUTES
+  cre_logic: >
+    Test 1: Event ID equals 4625 OR 4656,
+    count >= 10 grouped by Source IP in 5 min.
+    Response: Dispatch New Event, Ensure part of offense
 
 detection:
-  condition: >
-    HttpResponseCode = '403' OR HttpResponseCode = '401' AND
-    SameSourceIP COUNT > 10 AND
   timeframe: 5m
   threshold: 10
+  condition: same_source_ip
 
 response:
-  - Block source IP
+  - Block source IP temporarily
   - Review access logs
   - Check user permissions
+  - Escalate if repeated

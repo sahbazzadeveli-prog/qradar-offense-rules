@@ -1,0 +1,30 @@
+title: Broken Access Control Detection
+id: owasp-bac-004
+status: production
+description: Detects attempts to access resources beyond user authorization level
+author: SOC Team
+date: 2024/01/01
+category: owasp
+severity: high
+mitre:
+  tactic: Discovery
+  technique: T1083
+
+qradar:
+  rule_name: "OWASP - Broken Access Control Attempt"
+  rule_type: "EventRule"
+  severity: high
+  credibility: 8
+  relevance: 9
+
+detection:
+  condition: >
+    HttpResponseCode = '403' OR HttpResponseCode = '401' AND
+    SameSourceIP COUNT > 10 AND
+  timeframe: 5m
+  threshold: 10
+
+response:
+  - Block source IP
+  - Review access logs
+  - Check user permissions

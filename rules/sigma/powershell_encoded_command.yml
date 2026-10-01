@@ -1,0 +1,33 @@
+title: PowerShell Encoded Command Execution
+id: ps-encoded-001
+status: production
+description: Detects execution of PowerShell with Base64 encoded commands which is commonly used by attackers to bypass detection
+author: SOC Team
+date: 2024/01/01
+category: sigma
+severity: high
+mitre:
+  tactic: Execution
+  technique: T1059.001
+
+qradar:
+  rule_name: "SIGMA - PowerShell Encoded Command Execution"
+  rule_type: "EventRule"
+  severity: high
+  credibility: 8
+  relevance: 9
+  
+detection:
+  condition: >
+    EventCategory = 'Authentication' AND
+    CommandLine MATCHES '.*-[Ee][Nn][Cc][Oo][Dd][Ee][Dd].*' OR
+    CommandLine MATCHES '.*-[Ee][Nn][Cc].*' OR
+    CommandLine MATCHES '.*powershell.*[Bb][Aa][Ss][Ee]64.*'
+    
+  timeframe: 1m
+  threshold: 1
+
+response:
+  - Isolate affected system
+  - Capture memory dump
+  - Investigate parent process

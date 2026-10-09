@@ -1,0 +1,29 @@
+id: QRD-AD-011
+name: Active Directory - UAC Bypass Detection
+author: Sahbazzade Veli
+description: Detects User Account Control bypass attempts where attackers try to execute processes with elevated privileges without triggering the UAC prompt.
+severity: 9
+status: production
+rule_type: Custom Rule Engine (CRE) Event Rule
+mitre_attack:
+  tactic: Privilege Escalation (TA0004)
+  technique: 'Abuse Elevation Control Mechanism: Bypass User Account Control (T1548.002)'
+aql_query: 'SELECT "Username", sourceip, "Process Name", "Command Line", COUNT(*) AS uac_count
+  FROM events
+  WHERE "EventID" = ''4688''
+  AND ("Process Name" ILIKE ''%eventvwr%''
+  OR "Process Name" ILIKE ''%fodhelper%''
+  OR "Process Name" ILIKE ''%sdclt%''
+  OR "Process Name" ILIKE ''%computerdefaults%'')
+  AND "Elevation Token" ILIKE ''%%1936%%''
+  GROUP BY "Username", sourceip, "Process Name", "Command Line"
+  HAVING uac_count >= 1
+  LAST 10 MINUTES'
+rule_response:
+  ensure_offense: true
+  index_offense_by: sourceip
+  event_name: 'CRE: UAC Bypass Detected'
+response_playbook:
+  - Immediately isolate the affected system from the network.
+  - Analyze the full process execution chain for malicious activity.
+  - Review and enforce UAC policy settings across all endpoints.

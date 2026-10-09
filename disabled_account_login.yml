@@ -1,0 +1,25 @@
+id: QRD-AD-006
+name: Active Directory - Disabled Account Login Attempt
+author: Sahbazzade Veli
+description: Detects login attempts using disabled user accounts which may indicate unauthorized access attempts or credential reuse attacks.
+severity: 7
+status: production
+rule_type: Custom Rule Engine (CRE) Event Rule
+mitre_attack:
+  tactic: Initial Access (TA0001)
+  technique: 'Valid Accounts: Domain Accounts (T1078.002)'
+aql_query: 'SELECT "Username", sourceip, COUNT(*) AS login_count
+  FROM events
+  WHERE "EventID" = ''4625''
+  AND "Failure Reason" ILIKE ''%Account disabled%''
+  GROUP BY "Username", sourceip
+  HAVING login_count >= 1
+  LAST 10 MINUTES'
+rule_response:
+  ensure_offense: true
+  index_offense_by: sourceip
+  event_name: 'CRE: Disabled Account Login Attempt Detected'
+response_playbook:
+  - Verify why the account is disabled and who is attempting to use it.
+  - Block the source IP if attempts are repeated or unauthorized.
+  - Review account management logs for suspicious modifications.

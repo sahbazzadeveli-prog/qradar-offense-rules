@@ -1,0 +1,24 @@
+id: QRD-AD-008
+name: Active Directory - Firewall Rule Added or Modified
+author: Sahbazzade Veli
+description: Detects when a new firewall rule is added or an existing rule is modified which may indicate an attacker attempting to open ports or bypass network controls.
+severity: 7
+status: production
+rule_type: Custom Rule Engine (CRE) Event Rule
+mitre_attack:
+  tactic: Defense Evasion (TA0005)
+  technique: 'Impair Defenses: Disable or Modify System Firewall (T1562.004)'
+aql_query: 'SELECT "Username", sourceip, "Process Name", COUNT(*) AS fw_count
+  FROM events
+  WHERE "EventID" = ''4946'' OR "EventID" = ''4947'' OR "EventID" = ''4950''
+  GROUP BY "Username", sourceip, "Process Name"
+  HAVING fw_count >= 1
+  LAST 10 MINUTES'
+rule_response:
+  ensure_offense: true
+  index_offense_by: sourceip
+  event_name: 'CRE: Firewall Rule Added or Modified Detected'
+response_playbook:
+  - Review the newly added or modified firewall rule immediately.
+  - Revert unauthorized firewall changes to previous configuration.
+  - Investigate the source account for further suspicious activity.

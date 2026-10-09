@@ -1,0 +1,24 @@
+id: QRD-AD-002
+name: Active Directory - User Added to Admin Group
+author: Sahbaz Adevli
+description: Detects when a user account is added to a privileged administrator group such as Domain Admins or local Administrators.
+severity: 8
+status: production
+rule_type: Custom Rule Engine (CRE) Event Rule
+mitre_attack:
+  tactic: Privilege Escalation (TA0004)
+  technique: 'Account Manipulation: Group Membership (T1098.007)'
+aql_query: 'SELECT "Target Username", "Source Username", sourceip, COUNT(*) AS add_count
+  FROM events
+  WHERE "EventID" = ''4728'' OR "EventID" = ''4732'' OR "EventID" = ''4756''
+  GROUP BY "Target Username", "Source Username", sourceip
+  HAVING add_count >= 1
+  LAST 15 MINUTES'
+rule_response:
+  ensure_offense: true
+  index_offense_by: sourceip
+  event_name: 'CRE: Admin Group Addition Detected'
+response_playbook:
+  - Verify if the change was authorized by IT or HR.
+  - Immediately remove unauthorized accounts from privileged groups.
+  - Review recent activity of the added account for lateral movement.

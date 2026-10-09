@@ -1,0 +1,24 @@
+id: QRD-AD-010
+name: Active Directory - New Local User Account Created
+author: Sahbazzade Veli
+description: Detects when a new local user account is created on a Windows system which may indicate an attacker creating a backdoor account for persistent access.
+severity: 7
+status: production
+rule_type: Custom Rule Engine (CRE) Event Rule
+mitre_attack:
+  tactic: Persistence (TA0003)
+  technique: 'Create Account: Local Account (T1136.001)'
+aql_query: 'SELECT "Username", sourceip, "Target Username", COUNT(*) AS create_count
+  FROM events
+  WHERE "EventID" = ''4720''
+  GROUP BY "Username", sourceip, "Target Username"
+  HAVING create_count >= 1
+  LAST 15 MINUTES'
+rule_response:
+  ensure_offense: true
+  index_offense_by: sourceip
+  event_name: 'CRE: New Local User Account Created Detected'
+response_playbook:
+  - Verify if the new account creation was authorized by IT department.
+  - Immediately disable unauthorized accounts and investigate the source.
+  - Review all recent activity from the account that created the new user.

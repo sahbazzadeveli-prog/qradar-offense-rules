@@ -1,0 +1,24 @@
+id: QRD-AD-003
+name: Active Directory - Brute Force Attack Detection
+author: Sahbazzade Veli
+description: Detects multiple failed login attempts from a single source IP indicating a brute force attack against user accounts.
+severity: 8
+status: production
+rule_type: Custom Rule Engine (CRE) Event Rule
+mitre_attack:
+  tactic: Credential Access (TA0006)
+  technique: 'Brute Force: Password Guessing (T1110.001)'
+aql_query: 'SELECT "Username", sourceip, COUNT(*) AS fail_count
+  FROM events
+  WHERE "EventID" = ''4625''
+  GROUP BY "Username", sourceip
+  HAVING fail_count >= 10
+  LAST 5 MINUTES'
+rule_response:
+  ensure_offense: true
+  index_offense_by: sourceip
+  event_name: 'CRE: Brute Force Attack Detected'
+response_playbook:
+  - Block the source IP address immediately at the firewall level.
+  - Investigate the targeted user accounts for compromise.
+  - Enable account lockout policy if not already configured.

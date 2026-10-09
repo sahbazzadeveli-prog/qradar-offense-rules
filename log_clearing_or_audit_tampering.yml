@@ -1,0 +1,24 @@
+id: QRD-AD-009
+name: Active Directory - Log Clearing or Audit Tampering Detection
+author: Sahbazzade Veli
+description: Detects when Windows event logs are cleared or audit policies are modified which may indicate an attacker attempting to cover their tracks.
+severity: 9
+status: production
+rule_type: Custom Rule Engine (CRE) Event Rule
+mitre_attack:
+  tactic: Defense Evasion (TA0005)
+  technique: 'Indicator Removal: Clear Windows Event Logs (T1070.001)'
+aql_query: 'SELECT "Username", sourceip, "Log Name", COUNT(*) AS clear_count
+  FROM events
+  WHERE "EventID" = ''1102'' OR "EventID" = ''104'' OR "EventID" = ''4719''
+  GROUP BY "Username", sourceip, "Log Name"
+  HAVING clear_count >= 1
+  LAST 10 MINUTES'
+rule_response:
+  ensure_offense: true
+  index_offense_by: sourceip
+  event_name: 'CRE: Log Clearing or Audit Tampering Detected'
+response_playbook:
+  - Immediately investigate the account that cleared the logs.
+  - Check backup or forwarded logs for evidence of prior activity.
+  - Escalate to incident response team for full forensic investigation.
